@@ -9,7 +9,6 @@
 declare -a INSTANCES=($(aws ec2 describe-tags --filters "Name=resource-type,Values=instance" "Name=key,Values=AMI_Backup" "Name=value,Values=$1" --output text | awk '{ print $3 }'))
 
 NUMKEEP=2                               #How many backups should I keep before purging
-NAGHOST="admin-03.ae1b.aarp.net"        #Nagios Server (to disable notification)
 CURDATE=$(date +%m-%d-%Y)               #Current Data MM-DD-YYYY
 
 echo "Preparing to backup ${INSTANCES[@]}"
@@ -21,9 +20,6 @@ do
 
         #Getting the Name of the instance
         NAME=$(aws ec2 describe-tags --filters "Name=resource-type,Values=instance" "Name=resource-id,Values=$i" "Name=key,Values=Name" --output text | awk '{ print $5 }')
-
-        echo "Nagios: Disabled"
-        /root/aws_downtime_nagalert.sh ${NAGHOST} stop 2H ${NAME}
 
         echo "Backing up: $NAME ($i)"
         #create the image
@@ -97,10 +93,6 @@ do
                                 fi
                         done
                 done
-
-        echo "Nagios: Enabled"
-        /root/aws_downtime_nagalert.sh ${NAGHOST} start ${NAME}
-
         ;;
         esac
 done
